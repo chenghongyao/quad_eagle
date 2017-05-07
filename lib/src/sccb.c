@@ -12,41 +12,61 @@ void SCCB_Init()
 
 static void SCCB_Delay( )
 {
-	delay_us(20);
+//	uint16_t time=200;
+//	while(time)
+//	{
+//		time--;
+//	}
+	delay_us(50);
 }
 
 
-static void SCCB_Start(void)
+static uint8_t SCCB_Start(void)
 {	
 	SCCB_SDA = 1;
 	SCCB_SCL = 1;
 	SCCB_Delay();
+	SCCB_SDA_IN();
+	if(!SCCB_SDAI)
+	{
+		SCCB_SDA_OUT();
+		return 0;
+	}
+	SCCB_SDA_OUT();
 	SCCB_SDA = 0;	//下降沿
 	SCCB_Delay();
 	SCCB_SCL = 0;	
+	
+	if(SCCB_SDAI)
+	{
+		SCCB_SDA_OUT();
+		return 0;
+	}
+	return 1;
+	
 }
 
 
 static void SCCB_Stop(void)
 {
+	SCCB_SCL = 0;
 	SCCB_SDA = 0;
 	SCCB_Delay();
 	SCCB_SCL = 1;
 	SCCB_Delay();
 	SCCB_SDA = 1;
 	SCCB_Delay();
-	SCCB_SCL = 0;
 }
 
 static void SCCB_NAck(void)
 {
+	SCCB_SCL = 0;
 	SCCB_Delay();
 	SCCB_SDA = 1;		
+	SCCB_Delay();
 	SCCB_SCL = 1;			//SDA 高电平
 	SCCB_Delay();
 	SCCB_SCL = 0;
-	SCCB_Delay();	
-	SCCB_SDA = 0;
 	SCCB_Delay();		
 }
 
@@ -62,12 +82,12 @@ static uint8_t SCCB_WriteByte(uint8_t byte)
 		SCCB_SCL = 1;
 		SCCB_Delay();
 		SCCB_SCL = 0;
-		SCCB_Delay();	
 		byte <<=1;
 	}
 	
 	//检测应答信号
 	SCCB_SDA_IN();
+		SCCB_Delay();
 	SCCB_SCL = 1;	
 	SCCB_Delay();
 	if(SCCB_SDAI)res = 0;
@@ -79,18 +99,19 @@ static uint8_t SCCB_WriteByte(uint8_t byte)
 
 static uint8_t SCCB_ReadByte()
 {	
-	uint8_t val,i;
+	uint8_t val=0,i;
 	SCCB_SDA_IN();
 	for(i = 0;i<8;i++)
 	{	
 		val<<=1;	
+		SCCB_SCL = 0;
+		SCCB_Delay();	
 		SCCB_SCL = 1;
 		SCCB_Delay();	
-		if(SCCB_SDAI)val++;
-		SCCB_SCL=0;
-		SCCB_Delay();	
+		if(SCCB_SDAI)val|=0x01;
 	}
 	SCCB_SDA_OUT();
+	SCCB_SCL = 0;
 	return val;
 }
 
@@ -99,8 +120,12 @@ static uint8_t SCCB_ReadByte()
 
 uint8_t SCCB_WriteReg(uint8_t dev_addr,uint8_t reg_addr,uint8_t reg_val)
 {
-	SCCB_Start();
-	if(0==SCCB_WriteByte(dev_addr&0xFE))return 0;
+	if(0 == SCCB_Start())return 0;
+	if(0==SCCB_WriteByte(dev_addr&0xFE))
+	{
+		SCCB_Stop();
+		return 0;
+	};
 	if(0==SCCB_WriteByte(reg_addr))return 0;
 	if(0==SCCB_WriteByte(reg_val))return 0;
 	SCCB_Stop();
@@ -109,13 +134,23 @@ uint8_t SCCB_WriteReg(uint8_t dev_addr,uint8_t reg_addr,uint8_t reg_val)
 
 uint8_t SCCB_ReadReg(uint8_t dev_addr,uint8_t reg_addr,uint8_t *val)	//先读低字节
 {
-	SCCB_Start();
-	if(0==SCCB_WriteByte(dev_addr&0xFE))return 0;
+	if(0 == SCCB_Start())return 0;
+	if(0==SCCB_WriteByte(dev_addr&0xFE))
+	{
+		SCCB_Stop();
+		return 0;
+	};
+	
 	if(0==SCCB_WriteByte(reg_addr))return 0;
 	SCCB_Stop();
 	
-	SCCB_Start();
-	if(0==SCCB_WriteByte(dev_addr|0x01))return 0;
+	if(0 == SCCB_Start())return 0;
+	if(0==SCCB_WriteByte(dev_addr|0x01))
+	{
+		SCCB_Stop();
+		return 0;
+	};
+	
 	*val = SCCB_ReadByte();
 	SCCB_NAck();
 	SCCB_Stop();

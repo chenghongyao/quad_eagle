@@ -20,7 +20,7 @@ void loop_10Hz()
 }
 
 
-volatile uint8_t eagle_buffer[CAMERA_SIZE];
+uint8_t eagle_buffer[CAMERA_SIZE];
 void bufferinit()
 {
 	uint16_t i,j;
@@ -45,31 +45,14 @@ void bufferinit()
 } 
 
 
-void uploadImage()
-{
-	uint16_t i;
-	uint8_t cmd = 1;
-	uint16_t len = CAMERA_SIZE;
-	volatile uint8_t *buf = eagle_buffer;
-	EAGLE_PUTC(cmd);
-	EAGLE_PUTC(~cmd);
-	for(i=0;i<len;i++)
-	{
-		EAGLE_PUTC(*buf);
-		buf++;
-	}
-	EAGLE_PUTC(~cmd);
-	EAGLE_PUTC(cmd);
-}
 int main(void)
 {
-	uint16_t i,res = 1;
+
 	board_setup();
 	debug("³õÊ¼»¯...\r\n");
-	delay_ms(1000);
-	eagle_init();
+	eagle_init(eagle_buffer);
 	bufferinit();
-	uploadImage();
+	eagle_uploadImage();
 	delay_ms(1000);
 	
 	while(1)
@@ -77,7 +60,7 @@ int main(void)
 		eagle_startCapture();
 		while(meagle.hasUpdate == 0);
 		meagle.hasUpdate = 0;
-		uploadImage();
+		eagle_uploadImage();
 	}
 }
 

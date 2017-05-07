@@ -70,31 +70,30 @@ ov7725_reg_t ov7725_eagle_reg[] =
     {OV7725_DSP_Ctrl3    , 0x00},
     {OV7725_DSP_Ctrl4    , 0x00},
 		
-		{OV7725_HOutSize     , 0x28},
-		{OV7725_VOutSize     , 0x3c},
-//#if (CAMERA_W == 80)
-//    {OV7725_HOutSize     , 0x14},
-//#elif (CAMERA_W == 160)
-//    {OV7725_HOutSize     , 0x28},
-//#elif (CAMERA_W == 240)
-//    {OV7725_HOutSize     , 0x3c},
-//#elif (CAMERA_W == 320)
-//    {OV7725_HOutSize     , 0x50},
-//#else
 
-//#endif
+#if (CAMERA_W == 80)
+    {OV7725_HOutSize     , 0x14},
+#elif (CAMERA_W == 160)
+    {OV7725_HOutSize     , 0x28},
+#elif (CAMERA_W == 240)
+    {OV7725_HOutSize     , 0x3c},
+#elif (CAMERA_W == 320)
+    {OV7725_HOutSize     , 0x50},
+#else
 
-//#if (CAMERA_H == 60 )
-//    {OV7725_VOutSize     , 0x1E},
-//#elif (CAMERA_H == 120 )
-//    {OV7725_VOutSize     , 0x3c},
-//#elif (CAMERA_H == 180 )
-//    {OV7725_VOutSize     , 0x5a},
-//#elif (CAMERA_H == 240 )
-//    {OV7725_VOutSize     , 0x78},
-//#else
+#endif
 
-//#endif
+#if (CAMERA_H == 60 )
+    {OV7725_VOutSize     , 0x1E},
+#elif (CAMERA_H == 120 )
+    {OV7725_VOutSize     , 0x3c},
+#elif (CAMERA_H == 180 )
+    {OV7725_VOutSize     , 0x5a},
+#elif (CAMERA_H == 240 )
+    {OV7725_VOutSize     , 0x78},
+#else
+
+#endif
 
     {OV7725_EXHCH        , 0x00},
     {OV7725_GAM1         , 0x0c},
@@ -131,7 +130,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
 
 
 
-volatile eagle_t meagle;
+volatile eagle_t meagle;//Ò»¶¨Òª¼Óvolatile
 uint8_t eagle_initReg(void)
 {
 	uint16_t reg_num = sizeof(ov7725_eagle_reg)/sizeof(ov7725_reg_t);
@@ -159,13 +158,13 @@ uint8_t eagle_initReg(void)
 		printf("i=%d,size=%d\r\n",reg_num,sizeof(ov7725_eagle_reg)/sizeof(ov7725_reg_t));
 		for(i=0;i<reg_num;i++)
 		{
-			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
-			{
-				debug("¼Ä´æÆ÷%2x¶ÁÈ¡Ê§°Ü\r\n",ov7725_eagle_reg[i].addr);
-				return 0;
-			}
-		
-			debug("¼Ä´æÆ÷%2x=%x\r\n",ov7725_eagle_reg[i].addr,ver);
+//			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
+//			{
+//				debug("¼Ä´æÆ÷%2x¶ÁÈ¡Ê§°Ü\r\n",ov7725_eagle_reg[i].addr);
+//				return 0;
+//			}
+//			debug("¼Ä´æÆ÷%2x=%x\r\n",ov7725_eagle_reg[i].addr,ver);
+			
 			if(0 == OV7725_WriteReg(ov7725_eagle_reg[i].addr,ov7725_eagle_reg[i].val)) 
 			{
 				debug("¼Ä´æÆ÷Ð´ÈëÊ§°Ü\r\n");
@@ -173,17 +172,17 @@ uint8_t eagle_initReg(void)
 			}
 			
 			delay_ms(100);
-			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
-			{
-				debug("¼Ä´æÆ÷%2x¶ÁÈ¡Ê§°Ü\r\n",ov7725_eagle_reg[i].addr);
-				return 0;
-			}
-			
-			if(ov7725_eagle_reg[i].val != ver)
-			{
-					debug("¼Ä´æÆ÷%x¼ì²éÊ§°Ü-%x\r\n",ov7725_eagle_reg[i].addr,ver);
-			//	return 0;
-			}
+//			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
+//			{
+//				debug("¼Ä´æÆ÷%2x¶ÁÈ¡Ê§°Ü\r\n",ov7725_eagle_reg[i].addr);
+//				return 0;
+//			}
+//			
+//			if(ov7725_eagle_reg[i].val != ver)
+//			{
+//					debug("¼Ä´æÆ÷%x¼ì²éÊ§°Ü-%x\r\n",ov7725_eagle_reg[i].addr,ver);
+//			//	return 0;
+//			}
 		}
 	}
 	else
@@ -193,8 +192,9 @@ uint8_t eagle_initReg(void)
 	return 1;
 	
 }
-uint8_t eagle_init()
+uint8_t eagle_init(uint8_t *img_buffer)
 {
+	meagle.image = img_buffer;
 	meagle.hasUpdate = 0;
 	if(0 ==	eagle_initReg())
 	{
@@ -226,9 +226,10 @@ void eagle_uploadImage()
 	uint16_t i;
 	uint8_t cmd = 1;
 	uint16_t len = CAMERA_SIZE;
-	volatile uint8_t *buf = meagle.image;
+	uint8_t *buf = meagle.image;
 	EAGLE_PUTC(cmd);
 	EAGLE_PUTC(~cmd);
+	buf++;buf++;
 	for(i=0;i<len;i++)
 	{
 		EAGLE_PUTC(*buf);
@@ -243,6 +244,8 @@ void eagle_uploadImage()
 void eagle_startCapture()
 {
 	meagle.fStart = 1;
+	DMA_Cmd(DMA1_Channel3,DISABLE);
+	DMA_SetCurrDataCounter(DMA1_Channel3,CAMERA_SIZE);
 	EXTI_ClearFlag(EXTI_Line15);
 	H_EXTI_IT_ENABLE(15_10,0,0);	//¿ª³¡ÖÐ¶Ï
 }
@@ -253,7 +256,6 @@ void eagle_startCapture()
 
 void eagle_pauseCapture()
 {
-	
 	H_EXTI_IT_DISABLE(15_10);					//¹Ø³¡ÖÐ¶Ï
 }
 
