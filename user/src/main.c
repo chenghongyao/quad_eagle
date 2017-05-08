@@ -100,14 +100,17 @@ void bufferinit()
 
 void loop_main()
 {
-	static uint32_t tPre=0;
-	uint32_t tNow;
+//	static uint32_t tPre=0;
+	//uint32_t tNow;
 	if(meagle.hasUpdate == 1)			//约50ms进入一次,处理程序最好再50ms以内
 	{
 		meagle.hasUpdate = 0;	
+//		tNow = micros();
 		eagle_startCapture();			//使用双缓冲,更新当前图像,同时启动采集下一幅图像
-
-		eagle_uploadImage();		//图像上传
+//		printf("dt=%d\r\n",micros()-tNow);
+		
+		/**********图像处理**************/
+		//eagle_uploadImage();		//图像上传
 	
 	}
 }
