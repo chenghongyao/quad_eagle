@@ -51,16 +51,29 @@ uint8_t OV7725_ReadReg(uint8_t reg_addr,uint8_t *val)
 ov7725_reg_t ov7725_eagle_reg[] =
 {
     //寄存器,寄存器值
-    {OV7725_COM4         , 0x41},
-    {OV7725_CLKRC        , 0x08},
+//		{OV7725_COM4         , 0xC1},
+//		{OV7725_CLKRC        , 0x02},	//50帧
+	
+//		{OV7725_COM4         , 0x81},
+//		{OV7725_CLKRC        , 0x00},//112帧
+	
+//		{OV7725_COM4         , 0xC1},
+//		{OV7725_CLKRC        , 0x00},	//150帧
+	
+	
+    {OV7725_COM4         , 0x41},	//37帧,1帧26ms
+    {OV7725_CLKRC        , 0x01},
+		
+//		{OV7725_COM4         , 0x41},	//25帧
+//    {OV7725_CLKRC        , 0x02},
 		
     {OV7725_COM2         , 0x03},
-    {OV7725_COM3         , 0xD0},
-    {OV7725_COM7         , 0x40},
-    {OV7725_COM10        , 0x20},
-    {OV7725_HSTART       , 0x3F},
-    {OV7725_HSIZE        , 0x50},
-    {OV7725_VSTRT        , 0x03},
+    {OV7725_COM3         , 0xD0},	//RGB和YUV格式顺序,最低位为彩条测试
+    {OV7725_COM7         , 0x40},//QVGA
+    {OV7725_COM10        , 0x20},//
+    {OV7725_HSTART       , 0x3F},//行起始
+    {OV7725_HSIZE        , 0x50},//像素大小
+    {OV7725_VSTRT        , 0x03},//场起始控制
     {OV7725_VSIZE        , 0x78},
     {OV7725_HREF         , 0x00},
     {OV7725_SCAL0        , 0x0A},
@@ -95,8 +108,8 @@ ov7725_reg_t ov7725_eagle_reg[] =
 
 #endif
 
-    {OV7725_EXHCH        , 0x00},
-    {OV7725_GAM1         , 0x0c},
+    {OV7725_EXHCH        , 0x00}, //虚拟像素高位插入
+    {OV7725_GAM1         , 0x0c},//gama参数设置
     {OV7725_GAM2         , 0x16},
     {OV7725_GAM3         , 0x2a},
     {OV7725_GAM4         , 0x4e},
@@ -112,6 +125,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
     {OV7725_GAM14        , 0xd7},
     {OV7725_GAM15        , 0xe8},
     {OV7725_SLOP         , 0x20},
+		
     {OV7725_LC_RADI      , 0x00},
     {OV7725_LC_COEF      , 0x13},
     {OV7725_LC_XC        , 0x08},
@@ -122,7 +136,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
     {OV7725_BDMStep      , 0x03},
     {OV7725_SDE          , 0x04},
     {OV7725_BRIGHT       , 0x00},
-    {OV7725_CNST         , 0xFF},
+ //   {OV7725_CNST         , 0xFF},
     {OV7725_SIGN         , 0x06},
     {OV7725_UVADJ0       , 0x11},
     {OV7725_UVADJ1       , 0x02},
@@ -143,8 +157,7 @@ uint8_t eagle_initReg(void)
 		return 0;
 	}
 	debug("复位成功\r\n");
-	delay_ms(100);
-	
+		//最大不超过1ms的延时
 	//读取ID
 	if(0 == OV7725_ReadReg(OV7725_VER,&ver)) 
 	{
@@ -171,7 +184,7 @@ uint8_t eagle_initReg(void)
 				return 0;
 			}
 			
-			delay_ms(100);
+//			delay_ms(100);
 //			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
 //			{
 //				debug("寄存器%2x读取失败\r\n",ov7725_eagle_reg[i].addr);
@@ -183,7 +196,13 @@ uint8_t eagle_initReg(void)
 //					debug("寄存器%x检查失败-%x\r\n",ov7725_eagle_reg[i].addr,ver);
 //			//	return 0;
 //			}
+			
+			if(0 == eagle_setThreshold(meagle.threshold))
+			{
+				return 0;
+			}
 		}
+		
 	}
 	else
 	{
@@ -192,10 +211,13 @@ uint8_t eagle_initReg(void)
 	return 1;
 	
 }
-uint8_t eagle_init(uint8_t *img_buffer)
+
+uint8_t eagle_init(uint8_t *img_buffer1,uint8_t *img_buffer2)
 {
-	meagle.image = img_buffer;
+	meagle.image_gather = img_buffer1;
+	meagle.image_use = img_buffer2;
 	meagle.hasUpdate = 0;
+	meagle.threshold = mTab.threshold;
 	if(0 ==	eagle_initReg())
 	{
 		debug("OV7725寄存器初始化失败\r\n");
@@ -206,57 +228,101 @@ uint8_t eagle_init(uint8_t *img_buffer)
 }
 
 
-void eagle_upload(uint8_t cmd,uint8_t *buf,uint16_t len)
-{
-	uint16_t i;
-	EAGLE_PUTC(cmd);
-	EAGLE_PUTC(~cmd);
-	
-	for(i=0;i<len;i++)
-	{
-		EAGLE_PUTC(*buf);
-		buf++;
-	}
-	EAGLE_PUTC(~cmd);
-	EAGLE_PUTC(cmd);
-}
 
+
+uint8_t eagle_setThreshold(uint8_t val)
+{
+		if(0 == OV7725_WriteReg(OV7725_CNST,val)) 
+		{
+			debug("寄存器写入失败\r\n");
+			return 0;
+		}
+		
+		return 1;
+}
+//1=使用NRF24L01,约100ms
+//0=使用串口,约200ms@115200,100ms@115200
+#define UPLOAD_NRF	1
 void eagle_uploadImage()
 {
+	#define IMG_CMD	1
 	uint16_t i;
-	uint8_t cmd = 1;
-	uint16_t len = CAMERA_SIZE;
-	uint8_t *buf = meagle.image;
-	EAGLE_PUTC(cmd);
-	EAGLE_PUTC(~cmd);
-	buf++;buf++;
-	for(i=0;i<len;i++)
+	uint8_t cmd1[2]={IMG_CMD,~IMG_CMD};
+	uint8_t cmd2[2]={~IMG_CMD,IMG_CMD};
+	uint8_t *p= meagle.image_use+2;
+	
+#if	(UPLOAD_NRF == 1)
+	nrf24l01_sendPacket(cmd1,2);
+	for(i=0;i<75;i++)
 	{
-		EAGLE_PUTC(*buf);
-		buf++;
+		nrf24l01_sendPacket(p,32);
+		p+=32;
 	}
-	EAGLE_PUTC(~cmd);
-	EAGLE_PUTC(cmd);
+	nrf24l01_sendPacket(cmd2,2);
+#else
+	EAGLE_PUTC(cmd1[0]);
+	EAGLE_PUTC(cmd1[1]);
+	for(i=0;i<CAMERA_SIZE;i++)
+	{
+		EAGLE_PUTC(*p);
+		p++;
+	}
+	EAGLE_PUTC(cmd2[0]);
+	EAGLE_PUTC(cmd2[1]);
+#endif
+}
+
+
+
+void eagle_initDma(uint8_t *img_buf,uint32_t len)
+{
+	DMA_InitTypeDef DMA_InitStructure;
+
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&GPIOA->IDR);					//外设地址 PA口
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;		  //8位
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;						//外设地址不变
+	
+	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)img_buf;							//内存地址
+	DMA_InitStructure.DMA_BufferSize = len;											//内存大小
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;							//数据宽度
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;											//内存地址自增使能
+	
+	
+	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;													//单向，外设到内存
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal; 															//连续接收
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;											//高优先级
+	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;																//内存到内存	
+	DMA_Init(DMA1_Channel3,&DMA_InitStructure);																	//TIM3_CH4在通道3
 }
 
 
 
 void eagle_startCapture()
 {
-	meagle.fStart = 1;
-	DMA_Cmd(DMA1_Channel3,DISABLE);
-	DMA_SetCurrDataCounter(DMA1_Channel3,CAMERA_SIZE);
+	uint8_t *p = meagle.image_gather;
+	meagle.image_gather = meagle.image_use;
+	meagle.image_use = p;
+	
+	
+	meagle.fStart = 1;																	//启动标志位
+	DMA_Cmd(DMA1_Channel3,DISABLE);											//关闭DMA重新设置
+	eagle_initDma(meagle.image_gather,CAMERA_SIZE);
+	TIM_DMACmd(TIM3,TIM_DMA_CC4,ENABLE);								//启动定时器触发
 	EXTI_ClearFlag(EXTI_Line15);
-	H_EXTI_IT_ENABLE(15_10,0,0);	//开场中断
+	H_EXTI_IT_ENABLE(15);	//开场中断
 }
 
-
-
-
+void eagle_exchangeBuffer()
+{
+	uint8_t *p = meagle.image_gather;
+	meagle.image_gather = meagle.image_use;
+	meagle.image_use = p;
+}
 
 void eagle_pauseCapture()
 {
-	H_EXTI_IT_DISABLE(15_10);					//关场中断
+	TIM_DMACmd(TIM3,TIM_DMA_CC4,DISABLE);								//关闭定时器触发
+	H_EXTI_IT_DISABLE(15);															//关场中断
 }
 
 

@@ -333,6 +333,9 @@ u8 nrf24l01_sendPacket(void *txbuf,u8 len)
 }
 
 
+
+
+
 //32字节,发送完成后立即返回
 u8 nrf24l01_sendPacket2(void *txbuf,u8 len)
 {

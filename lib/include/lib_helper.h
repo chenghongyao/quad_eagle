@@ -36,13 +36,17 @@ HW_	ศํทย
 
 
 /*EXTI*/
-#define H_EXTI_Init(_port,_pin,_trigger)	do{EXTI_InitTypeDef EXTI_InitStructure={EXTI_Line##_pin,EXTI_Mode_Interrupt,_trigger,ENABLE};\
+#define H_EXTI_Init(_port,_pin,_trigger,_en)	do{EXTI_InitTypeDef EXTI_InitStructure={EXTI_Line##_pin,EXTI_Mode_Interrupt,_trigger,_en};\
 												H_RCC_ENAPB2(AFIO);	\
 												GPIO_EXTILineConfig(GPIO_PortSourceGPIO##_port,GPIO_PinSource##_pin);\
 												EXTI_Init(&EXTI_InitStructure);		}while(0)
 
-#define H_EXTI_IT_ENABLE(_pin,_pre,_sub)	H_NVIC_INIT(EXTI##_pin,_pre,_sub)
-#define H_EXTI_IT_DISABLE(_pin)						H_NVIC_CLOSE(EXTI##_pin)									
+//#define H_EXTI_IT_ENABLE(_pin,_pre,_sub)	H_NVIC_INIT(EXTI##_pin,_pre,_sub)
+//#define H_EXTI_IT_DISABLE(_pin)						H_NVIC_CLOSE(EXTI##_pin)	
+
+#define H_EXTI_IT_ENABLE(_line)						do{EXTI->PR=1<<(_line);EXTI->IMR|=1<<(_line);}while(0);
+#define H_EXTI_IT_DISABLE(_line)						do{EXTI->IMR&=~(1<<(_line));}while(0);
+
 /*EXTI END*/
 
 

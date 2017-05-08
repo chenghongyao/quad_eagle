@@ -310,7 +310,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>0</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -439,11 +439,6 @@
               <FileType>1</FileType>
               <FilePath>.\lib\src\sccb.c</FilePath>
             </File>
-            <File>
-              <FileName>dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\lib\src\dma.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -454,10 +449,52 @@
               <FileType>1</FileType>
               <FilePath>.\driver\eagle\eagle.c</FilePath>
             </File>
+            <File>
+              <FileName>nrf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\NRF24L01\nrf.c</FilePath>
+            </File>
+            <File>
+              <FileName>table.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\table\table.c</FilePath>
+            </File>
+            <File>
+              <FileName>led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\led\led.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>software</GroupName>
+          <Files>
+            <File>
+              <FileName>bytes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\bytes.c</FilePath>
+            </File>
+            <File>
+              <FileName>cmath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\cmath.c</FilePath>
+            </File>
+            <File>
+              <FileName>queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>wos.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\wos.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\key.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>::CMSIS</GroupName>

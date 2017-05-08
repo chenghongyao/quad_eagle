@@ -90,8 +90,8 @@ static uint8_t SCCB_WriteByte(uint8_t byte)
 		SCCB_Delay();
 	SCCB_SCL = 1;	
 	SCCB_Delay();
-	if(SCCB_SDAI)res = 0;
-	else res = 1;
+	if(SCCB_SDAI)res = 0;//NACK
+	else res = 1;					//ACK
 	SCCB_SCL = 0;
 	SCCB_SDA_OUT();
 	return res;

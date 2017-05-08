@@ -5,6 +5,7 @@
 
 
 uint8_t ledMode=SHINEALL;
+uint8_t beepMode = BEEP_NONE;
 
 void led_set(uint8_t index,uint8_t sta)
 {
@@ -21,9 +22,9 @@ void led_update()
 	static uint8_t ledbuf = LED_M1;
 
 //	static uint8_t counter=0;
-//	if (++counter < 10)return;		//���ڿ���Ƶ��
+//	if (++counter < 10)return;		//调节控制频率
 //	counter = 0;
-	led_setMode();
+//	led_setMode();
 	switch(ledMode)
 	{
 		case SHINEALL:
@@ -65,29 +66,113 @@ void led_update()
 	ledstatus = !ledstatus;
 }
 
-
-
-/////////////////////////////////////////////////////
-//У׼��->CYCLEALL
-//��ʧ�ź�->LIGHTHEAD
-//����->SHINEHEAD
-//Խ�������ȼ�Խ��
-////////////////////////////////////////////////////
-void led_setMode()
+#define BEEP_TIMES_SHORT2	1												//短鸣两声时间
+#define BEEP_TIMES_SHORT	2												//短鸣时间
+#define BEEP_TIMES_LONG		(2*BEEP_TIMES_SHORT)		//长鸣时间
+void beep_update()
 {
-	//if(mFlyFlag.lowBatary)ledMode = SHINEALL;
-	//if(mFlyFlag.flyEnable)ledMode = SHINEALL;	
+	static uint16_t cnt;
+	static uint8_t step=0;
+	static uint8_t last_mode = BEEP_NONE;
 	
-	if(mImu.hasIMUReady == 0)
+	if(last_mode == BEEP_NONE)		//等待上一个命令执行完成
 	{
-		ledMode = SHINEALL;
-	}
-	else if(mFlight.flyEnable)
+		last_mode = beepMode;
+		beepMode = BEEP_NONE;
+	}	
+
+	switch(last_mode)
 	{
-		ledMode = SHINEALL;
+		case BEEP_NONE:
+			beepM = 0;
+			cnt = 0;
+			break;
+		case BEEP_SHORT:				//短鸣
+			beepM = 1;
+			if(++cnt>BEEP_TIMES_SHORT)
+			{
+				beepM = 0;
+				last_mode = BEEP_NONE;
+				cnt = 0;
+			}
+			break;
+		case BEEP_LONG:					//长鸣
+			beepM = 1;
+			if(++cnt>BEEP_TIMES_LONG)
+			{
+				beepM = 0;
+				last_mode = BEEP_NONE;
+				cnt = 0;
+			}
+			break;
+		case BEEP_SHORT_TWICE:	//短鸣两声		
+			switch(step)
+			{
+				case 0:
+					beepM = 1;
+					if(++cnt>BEEP_TIMES_SHORT2) 
+					{
+						beepM = 0;
+						step++;
+						cnt = 0;
+					}
+					break;
+			case 1:
+				beepM = 0;
+				if(++cnt>BEEP_TIMES_SHORT2)
+				{
+					step++;
+					cnt = 0;
+				}
+				break;
+			case 2:
+				beepM = 1;
+				if(++cnt>BEEP_TIMES_SHORT2)
+				{
+					beepM = 0;
+					step=0;
+					last_mode = BEEP_NONE;
+					cnt = 0;
+				}
+				break;
+				default:
+						beepM = 0;
+						step=0;
+						cnt = 0;
+					break;
+			}
+			break;
+		default:
+			beepM = 0;
+			step=0;
+			last_mode = BEEP_NONE;
+			cnt = 0;
+		break;
 	}
-	else
-	{
-		ledMode = LIGHTALL;
-	}
+	
 }
+
+///////////////////////////////////////////////////////
+////校准中->CYCLEALL
+////丢失信号->LIGHTHEAD
+////正常->SHINEHEAD
+////越往下优先级越高
+//////////////////////////////////////////////////////
+//void led_setMode()
+//{
+//	//if(mFlyFlag.lowBatary)ledMode = SHINEALL;
+//	//if(mFlyFlag.flyEnable)ledMode = SHINEALL;	
+//	
+//	if(mImu.hasIMUReady == 0)
+//	{
+//		ledMode = SHINEALL;
+//	}
+//	else if(mFlight.flyEnable)
+//	{
+//		ledMode = SHINEALL;
+//	}
+//	else
+//	{
+//		ledMode = LIGHTALL;
+//	}
+//}

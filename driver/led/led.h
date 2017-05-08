@@ -18,22 +18,32 @@
 
 typedef enum
 {
-	SHINEALL,		//х╚╡©иак╦
-	SHINENONE,	//╡╩иак╦
-	SHINEHEAD,	//иам╥╡©
-	SHINETAIL,	//иан╡╡©
-	CYCLEALL,		//аВк╝╣ф
-	LIGHTHEAD,	//╣Цаам╥╡©
-	LIGHTAIL,		//╣Цаан╡╡©
-	LIGHTALL,		//╣Цаах╚╡©
+	SHINEALL,		//Е┘╗И┐╗И≈╙Г┐│
+	SHINENONE,	//Д╦█И≈╙Г┐│
+	SHINEHEAD,	//И≈╙Е╓╢И┐╗
+	SHINETAIL,	//И≈╙Е╟╬И┐╗
+	CYCLEALL,		//Ф╣│Ф╟╢Г│╞
+	LIGHTHEAD,	//Г┌╧Д╨╝Е╓╢И┐╗
+	LIGHTAIL,		//Г┌╧Д╨╝Е╟╬И┐╗
+	LIGHTALL,		//Г┌╧Д╨╝Е┘╗И┐╗
 }LED_MODE;
 
-extern uint8_t ledMode;
+typedef enum
+{
+	BEEP_NONE=0,
+	BEEP_SHORT,
+	BEEP_LONG,
+	BEEP_SHORT_TWICE,
+}BEEP_MODE;
 
-void led_init(void);	//ЁУй╪╩╞		
+
+extern uint8_t ledMode;
+extern uint8_t beepMode;
+
 void led_set(u8 index,u8 sta);
-void led_update(void);
 void led_setMode(void);
+void led_update(void);
+void beep_update(void);
 #endif
 
 

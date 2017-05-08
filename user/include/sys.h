@@ -91,7 +91,11 @@
 //board hardware
 //LED
 #define ledM PCout(13)
-#define beepM	PAout(1)
+
+#define beepM	PBout(7)
+
+#define keyUp 	PBin(8)
+#define keyDown 	PBin(9)
 
 
 //NRF24L01

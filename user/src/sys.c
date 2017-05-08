@@ -40,30 +40,6 @@ void JTAG_Set(uint8_t mode)
 }
 
 
-extern uint8_t eagle_buffer[CAMERA_SIZE];
-void dma1_init()
-{
-	DMA_InitTypeDef DMA_InitStructure;
-	/****配置DMA****************/
-	H_RCC_ENAHB(DMA1);					//打开时钟
-	DMA_DeInit(DMA1_Channel3); 
-	
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&GPIOA->IDR);					//外设地址 PA口
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;		  //8位
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;						//外设地址不变
-	
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)eagle_buffer;;							//内存地址
-	DMA_InitStructure.DMA_BufferSize = CAMERA_SIZE;											//内存大小
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;							//数据宽度
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;											//内存地址自增使能
-	
-	
-	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;													//单向，外设到内存
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal; 															//连续接收
-	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;											//高优先级
-	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;																//内存到内存	
-	DMA_Init(DMA1_Channel3,&DMA_InitStructure);																	//TIM3_CH4在通道3
-}
 
 void tim3_capture_init()
 {
@@ -78,7 +54,6 @@ void tim3_capture_init()
 	TIM_ICStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;				//不分频
 	TIM_ICStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;	//通道方向选择
 	TIM_ICInit(TIM3,&TIM_ICStructure);
-	TIM_DMACmd(TIM3,TIM_DMA_CC4,ENABLE);
 	TIM_Cmd(TIM3,ENABLE);
 }
 
@@ -93,22 +68,64 @@ void board_setup(void)
 	
 	//*LED*/
 	H_GPIO_Init(C,13,GPIO_Speed_50MHz,GPIO_Mode_Out_PP); //LED
+	H_GPIO_Init(B,7,GPIO_Speed_50MHz,GPIO_Mode_Out_PP); //BEEP
+	beepM = 0;
+	/*KEY*/
+	H_GPIO_Init(B,8,GPIO_Speed_50MHz,GPIO_Mode_IPU); 
+	H_GPIO_Init(B,9,GPIO_Speed_50MHz,GPIO_Mode_IPU); 
 	
 	/*USART1*/
 	usart1_init();
+	
+	
+	
+		//NRF24L01 
+	H_GPIO_Init(A,8,GPIO_Speed_50MHz,GPIO_Mode_IPU); 	//IRQ
+	H_GPIO_Init(B,12,GPIO_Speed_50MHz,GPIO_Mode_Out_PP);//CSN
+	H_GPIO_Init(A,11,GPIO_Speed_50MHz,GPIO_Mode_Out_PP); //CE
+	NRF_CE = 0;
+	NRF_CSN = 1;
+	
+	/*SPI2 NRF24L01*/
+	H_GPIO_Init(B,15,GPIO_Speed_50MHz,GPIO_Mode_AF_PP);//MOSI
+	H_GPIO_Init(B,14,GPIO_Speed_50MHz,GPIO_Mode_AF_PP);//MISO
+	H_GPIO_Init(B,13,GPIO_Speed_50MHz,GPIO_Mode_AF_PP);//SCK
+	
+	H_SPIx_ENRCC(2);
+	H_SPI_Init(2,SPI_CPOL_Low,SPI_CPHA_1Edge,SPI_FirstBit_MSB,8);
+	
+	
+	//EAGLE
 	SCCB_Init();
 	H_GPIO_Init(C,15,GPIO_Speed_50MHz,GPIO_Mode_IPU);	 	//场中断
-	H_EXTI_Init(C,15, EXTI_Trigger_Falling);		
+	H_EXTI_Init(C,15, EXTI_Trigger_Falling,ENABLE);	
+	H_EXTI_IT_DISABLE(15);	
+	H_NVIC_INIT(EXTI15_10,0,0);
 	
 	
-	//	H_GPIO_Init(B,1,GPIO_Speed_50MHz,GPIO_Mode_IPD);	 	//像素时钟
-//	H_EXTI_Init(B,1, EXTI_Trigger_Rising);	
 	
-	tim3_capture_init();
-	dma1_init();
-
+	tim3_capture_init();	//TIIM3_CH4上升沿触发
+	
+	H_RCC_ENAHB(DMA1);					//DMA初始化
+	DMA_DeInit(DMA1_Channel3); 
 	
 	delay_init();
+		/*TIM1 WOS*/
+	H_TIM18_ENRCC(1);
+	H_TIMEBASE_Init(1,72,1000);
+	H_TIMEBASE18_IT_UPDATE(1,0,2);
+	H_TIMEBASE_START(1);
+}
+
+
+//WOS
+void TIM1_UP_IRQHandler(void)
+{
+	if (H_TIMEBASE_ISUPDATE_F(1))
+	{
+		wos_update();
+		H_TIMEBASE_CLEARUPDATE_F(1);
+	}
 }
 
 
@@ -116,21 +133,17 @@ void EXTI15_10_IRQHandler(void)
 {
 	if(H_EXTI_ISPEND_F(15))
 	{
-		if(meagle.fStart == 1)
+		if(meagle.fStart == 1)//开始捕获图像
 		{
 			meagle.cnt = 0;
-			TIM_ClearFlag(TIM3,TIM_FLAG_CC4);
-			DMA_Cmd(DMA1_Channel3,ENABLE);
-			
-//			EXTI_ClearFlag(EXTI_Line1);
-//			H_EXTI_IT_ENABLE(1,0,1);			
+			TIM_ClearFlag(TIM3,TIM_FLAG_CC4);	//清除定时器标志
+			DMA_Cmd(DMA1_Channel3,ENABLE);		//启动DMA
 			meagle.fStart = 0;
 		}
-		else
+		else	//图像捕获完成
 		{
-//			H_EXTI_IT_DISABLE(1);	
 			//printf("%d\r\n",meagle.cnt );
-			printf("%d\r\n",DMA_GetCurrDataCounter(DMA1_Channel3));
+			debug("%d\r\n",DMA_GetCurrDataCounter(DMA1_Channel3));
 			meagle.hasUpdate = 1;
 			eagle_pauseCapture();
 		}
