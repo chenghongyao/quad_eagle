@@ -405,19 +405,9 @@
           <GroupName>lib</GroupName>
           <Files>
             <File>
-              <FileName>iap.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\lib\src\iap.c</FilePath>
-            </File>
-            <File>
               <FileName>flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\lib\src\flash.c</FilePath>
-            </File>
-            <File>
-              <FileName>myiic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\lib\src\myiic.c</FilePath>
             </File>
             <File>
               <FileName>lib_helper.c</FileName>
@@ -428,11 +418,6 @@
               <FileName>usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\lib\src\usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\lib\src\adc.c</FilePath>
             </File>
             <File>
               <FileName>sccb.c</FileName>
@@ -494,6 +479,16 @@
               <FileType>1</FileType>
               <FilePath>.\software\src\key.c</FilePath>
             </File>
+            <File>
+              <FileName>route.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\route.c</FilePath>
+            </File>
+            <File>
+              <FileName>csp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\csp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -546,6 +541,12 @@
         </targetInfos>
       </component>
       <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="GPIO" Cvendor="Keil" Cversion="3.5.0" condition="STM32F1 STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.1.0"/>
+        <targetInfos>
+          <targetInfo name="Target 1"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="PWR" Cvendor="Keil" Cversion="3.5.0" condition="STM32F1 STDPERIPH RCC">
         <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.1.0"/>
         <targetInfos>
           <targetInfo name="Target 1"/>

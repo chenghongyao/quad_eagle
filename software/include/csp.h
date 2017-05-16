@@ -60,7 +60,7 @@
 
 #define CSP_ACCEL_DATA 120
 #define CSP_CCD_DATA	 121
-#define CSP_CCD_IMAGE	 122
+#define CSP_EAGLE_DATA 122
 
 
 
@@ -80,6 +80,7 @@ void csp_putBuf(u8 *buf,u8 len);
 void csp_clearBuffer(void);
 void csp_recvByte(u8 dat);
 void csp_sendCCD(uint8_t start,uint8_t mid,uint8_t end);
-void csp_sendCCDImage(uint8_t index,uint8_t *buf);
+void csp_sendEagle(int16_t distance,float angle);
+
 #endif
 

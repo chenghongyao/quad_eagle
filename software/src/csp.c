@@ -117,7 +117,8 @@ void csp_uploadPC(void)
 	}
 	csp_txbuf[csp_txindex++]=check;
 	
-	usart3_putbuf(csp_txbuf,csp_txindex);
+	//usart3_putbuf(csp_txbuf,csp_txindex);
+	myputbuf(csp_txbuf,csp_txindex);
 	csp_clearBuffer();
 }
 
@@ -146,10 +147,15 @@ void csp_put32(u32 dat)
 
 void csp_putFloat(float dat)
 {
-	csp_txbuf[csp_txindex++] = BYTE0(dat);
-	csp_txbuf[csp_txindex++] = BYTE1(dat);
-	csp_txbuf[csp_txindex++] = BYTE2(dat);
-	csp_txbuf[csp_txindex++] = BYTE3(dat);
+	csp_txbuf[csp_txindex++] = *((uint8_t*)(&dat));
+	csp_txbuf[csp_txindex++] = *((uint8_t*)(&dat)+1);
+	csp_txbuf[csp_txindex++] = *((uint8_t*)(&dat)+2);
+	csp_txbuf[csp_txindex++] = *((uint8_t*)(&dat)+3);
+	
+	//	csp_txbuf[csp_txindex++] = BYTE0(dat);
+//	csp_txbuf[csp_txindex++] = BYTE1(dat);
+//	csp_txbuf[csp_txindex++] = BYTE2(dat);
+//	csp_txbuf[csp_txindex++] = BYTE3(dat);
 }
 void csp_putBuf(uint8_t *buf,uint8_t len)
 {
@@ -172,12 +178,14 @@ void csp_sendCCD(uint8_t start,uint8_t mid,uint8_t end)
 	
 }
 
-void csp_sendCCDImage(uint8_t index,uint8_t *buf)
+void csp_sendEagle(int16_t distance,float angle)
 {
-	csp_setName(CSP_CCD_IMAGE);
-	csp_put8(index);
-	csp_putBuf(buf,16);
-	csp_uploadUav();
+	csp_setName(CSP_EAGLE_DATA);
+	csp_put16(distance);
+	csp_putFloat(angle);
+	//csp_uploadUav();
+	csp_uploadPC();
+	
 }
 
 

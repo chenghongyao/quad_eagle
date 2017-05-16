@@ -37,7 +37,7 @@
 //#include "quat.h"
 //#include "pid.h"
 
-#define _DEBUG
+//#define _DEBUG
 #define _LOGT			//发送时间标签
 
 
@@ -118,39 +118,22 @@
 
 
 
-//IIC
-#define IIC_SDA  PAout(4)            
-#define IIC_SDAI PAin(4)
-#define IIC_SCL PAout(5)
-
-#define IIC_SCL_OUT()	do{H_GPIO_SETMODEL_F(A,5,F_GPIO_Speed_2M,F_GPIO_Mode_Out_PP);}while(0)
-#define IIC_SDA_OUT()	do{H_GPIO_SETMODEL_F(A,4,F_GPIO_Speed_2M,F_GPIO_Mode_Out_PP);}while(0)
-#define IIC_SDA_IN()	do{H_GPIO_SETMODEL_F(A,4,F_GPIO_Speed_IN,F_GPIO_Mode_IN_FLOATING);}while(0)
 
 
- 
-//CCD
-#define CCD_SI		PAout(5)
-#define CCD_CLK		PAout(4)
-//#define CCD_AO	PAin(3)
  
  
  
  
 //EAGLE
-#define EAGLE_VSYNC	PCout(15)					//时钟信号
-#define EAGLE_PCLK  PBin(1)						 //场中断信号
-#define EAGLE_HREF	PBin(0)						//行中断信号
+#define EAGLE_VSYNC	PBin(10)					//场中断信号
 
 //SCCB
-#define SCCB_SDA  PBout(10)            
-#define SCCB_SDAI PBin(10)
-#define SCCB_SDA_OUT()			do{H_GPIO_SETMODEH_F(B,10,F_GPIO_Speed_50M,F_GPIO_Mode_Out_PP);}while(0)
-#define SCCB_SDA_IN()				do{H_GPIO_SETMODEH_F(B,10,F_GPIO_Speed_IN,F_GPIO_Mode_IPU);}while(0)
+#define SCCB_SDA  PBout(6)            
+#define SCCB_SDAI PBin(6)
+#define SCCB_SDA_OUT()			do{H_GPIO_SETMODEL_F(B,6,F_GPIO_Speed_50M,F_GPIO_Mode_Out_PP);}while(0)
+#define SCCB_SDA_IN()				do{H_GPIO_SETMODEL_F(B,6,F_GPIO_Speed_IN,F_GPIO_Mode_IPU);}while(0)
 
-#define SCCB_SCL PBout(11)
-#define SCCB_SCL_OUT()			do{H_GPIO_SETMODEH_F(B,11,F_GPIO_Speed_50M,F_GPIO_Mode_Out_PP);}while(0)
-
+#define SCCB_SCL PBout(5)
 #define SCCB_DATA  					(GPIO_ReadInputData(GPIOA)&0x00FF)
  
  

@@ -4,20 +4,24 @@
 
 void SCCB_Init()
 {
-	H_GPIO_Init(B,11, GPIO_Speed_50MHz,GPIO_Mode_Out_PP);//SCL
-	H_GPIO_Init(B,10, GPIO_Speed_50MHz,GPIO_Mode_IPU);	//SDA			
-	IIC_SDA_OUT();
+	
+
+	
+	H_GPIO_Init(B,5, GPIO_Speed_50MHz,GPIO_Mode_Out_PP);//SCL
+	H_GPIO_Init(B,6, GPIO_Speed_50MHz,GPIO_Mode_IPU);	//SDA			
+	SCCB_SDA_OUT();
+	
 }
 
 
 static void SCCB_Delay( )
 {
-//	uint16_t time=200;
-//	while(time)
-//	{
-//		time--;
-//	}
-	delay_us(50);
+	uint16_t time=200;
+	while(time)
+	{
+		time--;
+	}
+//	delay_us(50);
 }
 
 
@@ -56,6 +60,7 @@ static void SCCB_Stop(void)
 	SCCB_Delay();
 	SCCB_SDA = 1;
 	SCCB_Delay();
+	SCCB_SCL = 0;
 }
 
 static void SCCB_NAck(void)
@@ -82,6 +87,7 @@ static uint8_t SCCB_WriteByte(uint8_t byte)
 		SCCB_SCL = 1;
 		SCCB_Delay();
 		SCCB_SCL = 0;
+		SCCB_Delay();
 		byte <<=1;
 	}
 	

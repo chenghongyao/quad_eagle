@@ -15,7 +15,7 @@
 static u8 f_tx_wait = 0;
 static u8 rf_setup;
 static u8 packet_size=32;
-static u8 rfch = 48;
+static u8 rfch = 20;
 static u8 bitrate = NRF_BR_2M;
 static u8 rfpower = NRF_POWER_0dB;
 static u8 txrx_address[5] = { 'w', 'e', 'i', 'c', 'h' };  //∑¢ÀÕµÿ÷∑

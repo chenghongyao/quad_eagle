@@ -16,7 +16,7 @@
 ********************/
 
 
-/*********************************************************************/
+/**************SCCB读写*******************************************************/
 uint8_t OV7725_WriteReg(uint8_t reg_addr,uint8_t reg_val)
 {
 	uint8_t i;
@@ -68,7 +68,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
 //    {OV7725_CLKRC        , 0x02},
 		
     {OV7725_COM2         , 0x03},
-    {OV7725_COM3         , 0xD0},	//RGB和YUV格式顺序,最低位为彩条测试
+    {OV7725_COM3         , 0xD0},//RGB和YUV格式顺序,最低位为彩条测试
     {OV7725_COM7         , 0x40},//QVGA
     {OV7725_COM10        , 0x20},//
     {OV7725_HSTART       , 0x3F},//行起始
@@ -108,7 +108,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
 
 #endif
 
-    {OV7725_EXHCH        , 0x00}, //虚拟像素高位插入
+    {OV7725_EXHCH        , 0x00},//虚拟像素高位插入
     {OV7725_GAM1         , 0x0c},//gama参数设置
     {OV7725_GAM2         , 0x16},
     {OV7725_GAM3         , 0x2a},
@@ -136,7 +136,7 @@ ov7725_reg_t ov7725_eagle_reg[] =
     {OV7725_BDMStep      , 0x03},
     {OV7725_SDE          , 0x04},
     {OV7725_BRIGHT       , 0x00},
- //   {OV7725_CNST         , 0xFF},
+ //   {OV7725_CNST         , 0xFF}, //阀值
     {OV7725_SIGN         , 0x06},
     {OV7725_UVADJ0       , 0x11},
     {OV7725_UVADJ1       , 0x02},
@@ -144,12 +144,13 @@ ov7725_reg_t ov7725_eagle_reg[] =
 
 
 
-volatile eagle_t meagle;//一定要加volatile
+volatile eagle_t meagle;//一定要加volatile防止优化
 uint8_t eagle_initReg(void)
 {
 	uint16_t reg_num = sizeof(ov7725_eagle_reg)/sizeof(ov7725_reg_t);
 	uint16_t i;
 	uint8_t ver;
+	
 	//复位
 	if(0 == OV7725_WriteReg(OV7725_COM7,0x80)) 
 	{
@@ -157,7 +158,9 @@ uint8_t eagle_initReg(void)
 		return 0;
 	}
 	debug("复位成功\r\n");
-		//最大不超过1ms的延时
+	
+	
+	//最大不超过1ms的延时
 	//读取ID
 	if(0 == OV7725_ReadReg(OV7725_VER,&ver)) 
 	{
@@ -166,36 +169,17 @@ uint8_t eagle_initReg(void)
 	}
 	debug("VER=%2x\r\n",ver);
 	
+	
+	
 	if(ver == OV7725_VER_V)
 	{
-		printf("i=%d,size=%d\r\n",reg_num,sizeof(ov7725_eagle_reg)/sizeof(ov7725_reg_t));
 		for(i=0;i<reg_num;i++)
 		{
-//			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
-//			{
-//				debug("寄存器%2x读取失败\r\n",ov7725_eagle_reg[i].addr);
-//				return 0;
-//			}
-//			debug("寄存器%2x=%x\r\n",ov7725_eagle_reg[i].addr,ver);
-			
 			if(0 == OV7725_WriteReg(ov7725_eagle_reg[i].addr,ov7725_eagle_reg[i].val)) 
 			{
 				debug("寄存器写入失败\r\n");
 				return 0;
 			}
-			
-//			delay_ms(100);
-//			if(0 == OV7725_ReadReg(ov7725_eagle_reg[i].addr,&ver)) 
-//			{
-//				debug("寄存器%2x读取失败\r\n",ov7725_eagle_reg[i].addr);
-//				return 0;
-//			}
-//			
-//			if(ov7725_eagle_reg[i].val != ver)
-//			{
-//					debug("寄存器%x检查失败-%x\r\n",ov7725_eagle_reg[i].addr,ver);
-//			//	return 0;
-//			}
 			
 			if(0 == eagle_setThreshold(meagle.threshold))
 			{
@@ -211,68 +195,6 @@ uint8_t eagle_initReg(void)
 	return 1;
 	
 }
-
-uint8_t eagle_init(uint8_t *img_buffer1,uint8_t *img_buffer2)
-{
-	meagle.image_gather = img_buffer1;
-	meagle.image_use = img_buffer2;
-	meagle.hasUpdate = 0;
-	meagle.threshold = mTab.threshold;
-	if(0 ==	eagle_initReg())
-	{
-		debug("OV7725寄存器初始化失败\r\n");
-		return 0;
-	}
-	debug("OV7725寄存器初始化成功\r\n");
-	return 1;
-}
-
-
-
-
-uint8_t eagle_setThreshold(uint8_t val)
-{
-		if(0 == OV7725_WriteReg(OV7725_CNST,val)) 
-		{
-			debug("寄存器写入失败\r\n");
-			return 0;
-		}
-		
-		return 1;
-}
-//1=使用NRF24L01,约100ms
-//0=使用串口,约200ms@115200,100ms@115200
-#define UPLOAD_NRF	1
-void eagle_uploadImage()
-{
-	#define IMG_CMD	1
-	uint16_t i;
-	uint8_t cmd1[2]={IMG_CMD,~IMG_CMD};
-	uint8_t cmd2[2]={~IMG_CMD,IMG_CMD};
-	uint8_t *p= meagle.image_use+2;
-	
-#if	(UPLOAD_NRF == 1)
-	nrf24l01_sendPacket(cmd1,2);
-	for(i=0;i<75;i++)
-	{
-		nrf24l01_sendPacket(p,32);
-		p+=32;
-	}
-	nrf24l01_sendPacket(cmd2,2);
-#else
-	EAGLE_PUTC(cmd1[0]);
-	EAGLE_PUTC(cmd1[1]);
-	for(i=0;i<CAMERA_SIZE;i++)
-	{
-		EAGLE_PUTC(*p);
-		p++;
-	}
-	EAGLE_PUTC(cmd2[0]);
-	EAGLE_PUTC(cmd2[1]);
-#endif
-}
-
-
 
 void eagle_initDma(uint8_t *img_buf,uint32_t len)
 {
@@ -296,6 +218,34 @@ void eagle_initDma(uint8_t *img_buf,uint32_t len)
 }
 
 
+uint8_t eagle_init(uint8_t *img_buffer1,uint8_t *img_buffer2)
+{
+	meagle.image_gather = img_buffer1;
+	meagle.image_use = img_buffer2;
+	meagle.status = EAGLE_IDLE;
+	meagle.threshold = mTab.threshold;
+	if(0 ==	eagle_initReg())
+	{
+		debug("OV7725寄存器初始化失败\r\n");
+		return 0;
+	}
+	debug("OV7725寄存器初始化成功\r\n");
+	return 1;
+}
+
+
+
+//设置阀值
+uint8_t eagle_setThreshold(uint8_t val)
+{
+		if(0 == OV7725_WriteReg(OV7725_CNST,val)) 
+		{
+			debug("寄存器写入失败\r\n");
+			return 0;
+		}
+		
+		return 1;
+}
 
 void eagle_startCapture()
 {
@@ -303,26 +253,203 @@ void eagle_startCapture()
 	meagle.image_gather = meagle.image_use;
 	meagle.image_use = p;
 	
-	
-	meagle.fStart = 1;																	//启动标志位
+	meagle.status = EAGLE_START;												//启动标志位
 	DMA_Cmd(DMA1_Channel3,DISABLE);											//关闭DMA重新设置
 	eagle_initDma(meagle.image_gather,CAMERA_SIZE);
-	TIM_DMACmd(TIM3,TIM_DMA_CC4,ENABLE);								//启动定时器触发
-	EXTI_ClearFlag(EXTI_Line15);
-	H_EXTI_IT_ENABLE(15);	//开场中断
+	
+
+	EXTI_ClearFlag(EXTI_Line10);
+	H_EXTI_IT_ENABLE(10);	//开场中断
 }
 
-void eagle_exchangeBuffer()
-{
-	uint8_t *p = meagle.image_gather;
-	meagle.image_gather = meagle.image_use;
-	meagle.image_use = p;
-}
 
 void eagle_pauseCapture()
 {
 	TIM_DMACmd(TIM3,TIM_DMA_CC4,DISABLE);								//关闭定时器触发
-	H_EXTI_IT_DISABLE(15);															//关场中断
+	H_EXTI_IT_DISABLE(10);															//关场中断
+}
+
+
+
+
+
+/***********************图像处理********************/
+
+void eagle_uploadImage(uint8_t *buffer)
+{
+	#define IMG_CMD	1
+	uint16_t i;
+	uint8_t cmd1[2]={IMG_CMD,~IMG_CMD};
+	uint8_t cmd2[2]={~IMG_CMD,IMG_CMD};
+	uint8_t *p= buffer;
+#if	(UPLOAD_NRF == 1)
+	nrf24l01_sendPacket(cmd1,2);
+	
+	for(i=0;i<75;i++)
+	{
+		nrf24l01_sendPacket(p,32);
+		p+=32;
+	}
+	nrf24l01_sendPacket(cmd2,2);
+#else
+	EAGLE_PUTC(cmd1[0]);
+	EAGLE_PUTC(cmd1[1]);
+	for(i=0;i<CAMERA_SIZE;i++)
+	{
+		EAGLE_PUTC(*p);
+		p++;
+	}
+	EAGLE_PUTC(cmd2[0]);
+	EAGLE_PUTC(cmd2[1]);
+#endif
+}
+
+
+//发送完成返回1
+uint8_t eagle_uploadImageAnsy(uint8_t *buffer)
+{
+	static uint8_t step = 0;
+	static uint8_t *p;
+	static uint16_t cnt;
+	uint8_t len;
+	uint8_t cmd1[2]={0x01,0xFE};
+	uint8_t cmd2[2]={0xFE,0x01};
+
+	if(step==0)
+	{
+		nrf24l01_sendPacket(cmd1,2);
+		p = buffer;
+		cnt = CAMERA_SIZE;
+		step ++;
+	}
+	else if(step == 1)
+	{
+		
+		len = (cnt >32)?32:cnt;//剩余量和32取最小值
+		nrf24l01_sendPacket(p,len);
+
+		p+=len;
+		cnt-=len;
+		if(cnt==0)	//发送完成
+		{
+			step ++;
+		}
+	}
+	else
+	{
+		nrf24l01_sendPacket(cmd2,2);
+		step = 0;
+		return 1;
+	}
+	return 0;
+}
+
+
+//发送完成返回1
+uint8_t eagle_uploadRouteAnsy(uint8_t *buffer)
+{
+	static uint8_t step = 0;
+	static uint8_t *p;
+	static uint16_t cnt;
+	uint8_t len;
+	uint8_t cmd1[2]={0x02,0xFD};
+	uint8_t cmd2[2]={0xFD,0x02};
+
+	if(step==0)
+	{
+		nrf24l01_sendPacket(cmd1,2);
+		p = buffer;
+		cnt = CAMERA_H;
+		step ++;
+	}
+	else if(step == 1)
+	{
+		
+		len = (cnt >32)?32:cnt;//剩余量和32取最小值
+		nrf24l01_sendPacket(p,len);
+
+		p+=len;
+		cnt-=len;
+		if(cnt==0)	//发送完成
+		{
+			step ++;
+		}
+	}
+	else
+	{
+		nrf24l01_sendPacket(cmd2,2);
+		step = 0;
+		return 1;
+	}
+	return 0;
+}
+
+
+//解压整副图像
+void eagle_prase(uint8_t *raw_buffer,uint8_t *prase_buffer)
+{
+	uint16_t h,w;
+	uint8_t *praw = raw_buffer;
+	uint8_t *pprase = prase_buffer;
+	//低位在左
+	for(h=0;h<CAMERA_H;h++)
+	{
+		for(w=0;w<(CAMERA_W/8);w++)
+		{
+#if EAGLE_LEFT_MSB == 1		//高位在左
+			*pprase++= ((*praw&0x80)==0)?0:0xff;
+			*pprase++= ((*praw&0x40)==0)?0:0xff;
+			*pprase++= ((*praw&0x20)==0)?0:0xff;
+			*pprase++= ((*praw&0x10)==0)?0:0xff;
+			*pprase++= ((*praw&0x08)==0)?0:0xff;
+			*pprase++= ((*praw&0x04)==0)?0:0xff;
+			*pprase++= ((*praw&0x02)==0)?0:0xff;
+			*pprase++= ((*praw&0x01)==0)?0:0xff;		
+#else//低位在左	
+		*pprase++= ((*praw&0x01)==0)?0:0xff;
+		*pprase++= ((*praw&0x02)==0)?0:0xff;
+		*pprase++= ((*praw&0x04)==0)?0:0xff;
+		*pprase++= ((*praw&0x08)==0)?0:0xff;
+		*pprase++= ((*praw&0x10)==0)?0:0xff;
+		*pprase++= ((*praw&0x20)==0)?0:0xff;
+		*pprase++= ((*praw&0x40)==0)?0:0xff;
+		*pprase++= ((*praw&0x80)==0)?0:0xff;
+#endif
+		}
+	}
+}
+
+
+//img_buffer:原始图像数据(未解压)
+void eagle_praseLine(uint8_t *img_buffer,uint8_t *line_buffer,uint16_t line_num)
+{
+	uint16_t w;
+	uint8_t *praw;
+	praw = img_buffer + line_num*(CAMERA_W/8);		//指向解析行	
+
+	for(w=0;w<(CAMERA_W/8);w++)
+	{
+#if EAGLE_LEFT_MSB == 1		//高位在左
+		*line_buffer++= ((*praw&0x80)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x40)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x20)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x10)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x08)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x04)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x02)==0)?0:0xff;
+		*line_buffer++= ((*praw&0x01)==0)?0:0xff;		
+#else//低位在左	
+		*line_buffer++= (((*praw)&0x01)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x02)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x04)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x08)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x10)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x20)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x40)==0)?0:0xff;
+		*line_buffer++= (((*praw)&0x80)==0)?0:0xff;
+#endif
+		praw++;
+	}
 }
 
 
