@@ -489,6 +489,11 @@
               <FileType>1</FileType>
               <FilePath>.\software\src\csp.c</FilePath>
             </File>
+            <File>
+              <FileName>sbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\software\src\sbus.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

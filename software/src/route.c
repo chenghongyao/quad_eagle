@@ -157,8 +157,7 @@ uint16_t route_find(uint8_t *img_buffer,uint8_t *result,uint16_t line_start,uint
 
 
 //最小二乘法求直线斜率
-
-float route_getAngle(uint8_t *route,uint16_t line_start,uint16_t n)
+float route_getSlope(uint8_t *route,uint16_t line_start,uint16_t n)
 {
 	double sumx = 0.0f;
 	double sumy = 0.0f;
@@ -192,3 +191,18 @@ int16_t route_getAverageDistance(uint8_t *route,uint16_t line_start,uint16_t n)
 	return ((int16_t)sum -ROUTE_MIDPOS) ;
 	
 }
+
+
+////route:原始路线
+////route_res:拟合结果
+////line_start:拟合起始行
+////n:拟合点数(拟合窗口大小)
+//void route_fit(uint8_t *route,uint8_t *route_res,uint16_t line_start,uint16_t n)
+//{
+//	uint16_t i;
+//	route_getSlope(route,line_start,n);
+//	for(i=0;i<n;i++)
+//	{
+//		route_res
+//	}
+//}

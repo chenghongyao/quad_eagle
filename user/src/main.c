@@ -6,6 +6,7 @@
 
 #include "route.h"
 #include "csp.h"
+#include "sbus.h"
 
 //LED,BEEP
 void loop_10Hz()
@@ -132,7 +133,7 @@ void loop_main()
 		}
 		route_start = route_find(meagle.image_use,eagle_route,CAMERA_H-1,CAMERA_H,route_start);	
 		distance =  route_getAverageDistance(eagle_route,0,5);	//第0到第10行,求线到中心距离
-		angle = route_getAngle(eagle_route,0,10);								//求第0行到第10行的拟合斜率	
+		angle = route_getSlope(eagle_route,0,10);								//求第0行到第10行的拟合斜率	
 		csp_sendEagle(distance,angle);
 		//eagle_uploadImage(meagle.image_use);		//图像上传
 	}
