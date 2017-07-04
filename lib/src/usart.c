@@ -6,6 +6,7 @@
 void usart1_init()
 {
 	H_USART1_ENRCC();
+	
 	H_USART_Init(1,500000,USART_Mode_Rx | USART_Mode_Tx);
 	H_USART_IT_RXNE(1,2,2);
 	
@@ -91,21 +92,10 @@ void USART1_IRQHandler(void)
 	{
 		uint8_t Res;
 		Res = USART_ReceiveData(USART1);
-		if(Res == 0x7f)
+		if(Res)
 		{
-//	
-//			++isp_counter;
-//			if(isp_counter == 5)
-//			{
-//				Sys_Soft_Reset();
-//			}
-//		}
-//		else
-//		{
-//			isp_counter = 0;
+		
 		}
-		//ANO_RecvByte(Res);
-		//H_USART_PUT8_F(2,Res);
 	}
 }
 
@@ -133,6 +123,11 @@ void USART3_IRQHandler(void)
 	{
 		uint8_t Res;
 		Res =USART3->DR; 
+		
+		if(Res)
+		{
+		
+		}
 		//queue_push(&qUart, Res);
 		//H_USART_PUT8_F(3, Res);
 	}

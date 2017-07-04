@@ -51,6 +51,7 @@ uint16_t route_find(uint8_t *img_buffer,uint8_t *result,uint16_t line_start,uint
 						}                       
 						j--;				
 				}
+				
 				if(fLeft)																											//搜索到了左边界才继续搜索右边界
 				{
 						scan_width = (width_in_black < (CAMERA_W - 1 - search_start)) ? width_in_black : (CAMERA_W - 1 - search_start); //扫描长度
@@ -114,7 +115,6 @@ uint16_t route_find(uint8_t *img_buffer,uint8_t *result,uint16_t line_start,uint
 							j++;
 					}
 					
-					
 					if(fLeft)//找到了左边界才继续找右边界
 					{
 							scan_width = (width_in_black < (CAMERA_W - 1 - j)) ? width_in_black : (CAMERA_W - 1 - j); //扫描长度
@@ -130,7 +130,6 @@ uint16_t route_find(uint8_t *img_buffer,uint8_t *result,uint16_t line_start,uint
 									j++;
 							}
 					}
-					
 				}
 		}
 		
@@ -172,7 +171,7 @@ float route_getSlope(uint8_t *route,uint16_t line_start,uint16_t n)
 		sumxy += (*route)*i;
 		sumx2 += i*i;
 		route++;
-	}
+	}	
 	return (sumx*sumy - n*sumxy)/(sumx*sumx-n*sumx2);
 }
 
@@ -188,7 +187,7 @@ int16_t route_getAverageDistance(uint8_t *route,uint16_t line_start,uint16_t n)
 		sum+= *route++;
 	}
 	sum /= n;
-	return ((int16_t)sum -ROUTE_MIDPOS) ;
+	return (int16_t)(sum -ROUTE_MIDPOS);
 	
 }
 
@@ -206,3 +205,5 @@ int16_t route_getAverageDistance(uint8_t *route,uint16_t line_start,uint16_t n)
 //		route_res
 //	}
 //}
+
+

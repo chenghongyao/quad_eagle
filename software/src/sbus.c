@@ -23,10 +23,10 @@ void sbus_init(void)
 	mSbus.channel.ch14 = 0;
 	mSbus.channel.ch15 = 0;
 	mSbus.channel.ch16 = 0;
-	mSbus.channel.flags.ch17 = 0;
-	mSbus.channel.flags.ch18 = 0;
-	mSbus.channel.flags.failsafe = 0;
-	mSbus.channel.flags.framelost = 0;
+	mSbus.channel.dg1 = 0;
+	mSbus.channel.dg1 = 0;
+	mSbus.channel.failsafe = 0;
+	mSbus.channel.framelost = 1;
 	
 }
 

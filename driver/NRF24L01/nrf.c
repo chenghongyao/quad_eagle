@@ -303,33 +303,43 @@ void nrf24l01_sendAckPacket(u8 *buf,u8 len)
 	NRF_CSN = 1;	
 }
 
+
+
 //32字节
+//1,发送成功,0,等待发送
 u8 nrf24l01_sendPacket(void *txbuf,u8 len)
 {
 	u8 sta;
-	nrf24l01_writePayload(txbuf,len);//写数据到TX BUF 32 个字节
-	while(NRF_IRQ == 1); 				//等待发送完成
-	sta=nrf24l01_readReg(STATUS); //读取状态寄存器的值 
-	nrf24l01_writeReg(STATUS,sta); //清除 TX_DS 或MAX_RT 中断标志
+	static uint32_t tPre = 0;
 	
-#ifdef NRF_ACKPAY_ENABLE
-	if(sta&RX_OK)//发送完成
+	if(NRF_IRQ == 1)	//发送未完成或没有设置发送
 	{
-		nrf_acklen = nrf24l01_getDynamicPayloadSize();
-		nrf24l01_readPayload(nrf_ackbuf,nrf_acklen);//读取数据	
-		return RX_OK;
-	}
-	if(sta&MAX_TX) //达到最大重发次数
-	{
+		if(micros()-tPre<10000)	//10ms
+		{
+			return 0;					//未发送完成
+		}
+		//超时则直接发送下一包
+		nrf24l01_clearStatus();
 		nrf24l01_FlushTx();
-		return MAX_TX;
 	}
-#endif
-	if(sta&TX_OK)//发送完成
+	else		//发送完成
 	{
-		return TX_OK;
+			nrf24l01_clearStatus();
+		#ifdef NRF_ACKPAY_ENABLE
+			if(sta&RX_OK)//发送完成
+			{
+				nrf_acklen = nrf24l01_getDynamicPayloadSize();
+				nrf24l01_readPayload(nrf_ackbuf,nrf_acklen);//读取数据	
+			}
+			else if(sta&MAX_TX) //达到最大重发次数,当作发送完成
+			{
+				nrf24l01_FlushTx();
+			}
+		#endif
 	}
-	return 0xff;//其他原因发送失败
+	nrf24l01_writePayload(txbuf,len);//写数据到TX BUF 32 个字节
+	tPre = micros();									//记录发送时间
+	return 1;												//写入成功
 }
 
 

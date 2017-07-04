@@ -312,22 +312,21 @@ uint8_t eagle_uploadImageAnsy(uint8_t *buffer)
 	static uint8_t *p;
 	static uint16_t cnt;
 	uint8_t len;
+	
 	uint8_t cmd1[2]={0x01,0xFE};
 	uint8_t cmd2[2]={0xFE,0x01};
 
 	if(step==0)
 	{
-		nrf24l01_sendPacket(cmd1,2);
+		if(0==nrf24l01_sendPacket(cmd1,2))return 0;
 		p = buffer;
 		cnt = CAMERA_SIZE;
 		step ++;
 	}
 	else if(step == 1)
 	{
-		
 		len = (cnt >32)?32:cnt;//剩余量和32取最小值
-		nrf24l01_sendPacket(p,len);
-
+		if(0==nrf24l01_sendPacket(p,len))return 0;
 		p+=len;
 		cnt-=len;
 		if(cnt==0)	//发送完成
@@ -337,10 +336,11 @@ uint8_t eagle_uploadImageAnsy(uint8_t *buffer)
 	}
 	else
 	{
-		nrf24l01_sendPacket(cmd2,2);
+		if(0==nrf24l01_sendPacket(cmd2,2))return 0;
 		step = 0;
-		return 1;
+		return 1;				//发送完成
 	}
+	
 	return 0;
 }
 

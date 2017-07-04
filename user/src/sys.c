@@ -70,6 +70,7 @@ void board_setup(void)
 	H_GPIO_Init(C,13,GPIO_Speed_50MHz,GPIO_Mode_Out_PP); //LED
 	H_GPIO_Init(B,7,GPIO_Speed_50MHz,GPIO_Mode_Out_PP); //BEEP
 	beepM = 0;
+	ledM = 1;
 	
 	
 	/*KEY*/
