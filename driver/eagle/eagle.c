@@ -357,17 +357,15 @@ uint8_t eagle_uploadRouteAnsy(uint8_t *buffer)
 
 	if(step==0)
 	{
-		nrf24l01_sendPacket(cmd1,2);
+		if(0==nrf24l01_sendPacket(cmd1,2))return 0;
 		p = buffer;
 		cnt = CAMERA_H;
 		step ++;
 	}
 	else if(step == 1)
 	{
-		
 		len = (cnt >32)?32:cnt;//剩余量和32取最小值
-		nrf24l01_sendPacket(p,len);
-
+		if(0==nrf24l01_sendPacket(p,len))return 0;
 		p+=len;
 		cnt-=len;
 		if(cnt==0)	//发送完成
@@ -377,14 +375,14 @@ uint8_t eagle_uploadRouteAnsy(uint8_t *buffer)
 	}
 	else
 	{
-		nrf24l01_sendPacket(cmd2,2);
+		if(0==nrf24l01_sendPacket(cmd2,2))return 0;
 		step = 0;
 		return 1;
 	}
 	return 0;
 }
 
-
+//==============================================================================================
 //解压整副图像
 void eagle_prase(uint8_t *raw_buffer,uint8_t *prase_buffer)
 {
@@ -421,11 +419,12 @@ void eagle_prase(uint8_t *raw_buffer,uint8_t *prase_buffer)
 
 
 //img_buffer:原始图像数据(未解压)
+//做了修改,靠近底端的标号为0,即line_num=0
 void eagle_praseLine(uint8_t *img_buffer,uint8_t *line_buffer,uint16_t line_num)
 {
 	uint16_t w;
 	uint8_t *praw;
-	praw = img_buffer + line_num*(CAMERA_W/8);		//指向解析行	
+	praw = img_buffer + (CAMERA_H-1-line_num)*(CAMERA_W/8);		//指向解析行,最底下的一行标号为0
 
 	for(w=0;w<(CAMERA_W/8);w++)
 	{

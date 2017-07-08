@@ -175,7 +175,6 @@ void csp_sendCCD(uint8_t start,uint8_t mid,uint8_t end)
 	csp_put8(end);
 	//csp_uploadUav();
 	csp_uploadPC();
-	
 }
 
 void csp_sendEagle(int16_t distance,float angle)
@@ -184,10 +183,19 @@ void csp_sendEagle(int16_t distance,float angle)
 	csp_put16(distance);
 	csp_putFloat(angle);
 	//csp_uploadUav();
-	csp_uploadPC();
-	
+	//csp_uploadPC();
 }
 
+
+//
+void csp_sendRoute(uint8_t msg,uint16_t distance)
+{
+	csp_setName(CSP_EAGLE_ROUTE);
+	csp_put8(msg);
+	csp_put16(distance);
+	//csp_uploadUav();
+	csp_uploadPC();
+}
 
 
 

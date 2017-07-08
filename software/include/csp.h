@@ -61,7 +61,7 @@
 #define CSP_ACCEL_DATA 120
 #define CSP_CCD_DATA	 121
 #define CSP_EAGLE_DATA 122
-
+#define CSP_EAGLE_ROUTE 123
 
 
 
@@ -81,6 +81,6 @@ void csp_clearBuffer(void);
 void csp_recvByte(u8 dat);
 void csp_sendCCD(uint8_t start,uint8_t mid,uint8_t end);
 void csp_sendEagle(int16_t distance,float angle);
-
+void csp_sendRoute(uint8_t msg,uint16_t distance);
 #endif
 

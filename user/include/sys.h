@@ -136,8 +136,8 @@
 #define SCCB_SCL PBout(5)
 #define SCCB_DATA  					(GPIO_ReadInputData(GPIOA)&0x00FF)
  
- 
- 
+
+
 void Sys_Soft_Reset(void);      //系统软复位
 void Sys_Standby(void);         //待机模式 	
 void JTAG_Set(uint8_t mode);
